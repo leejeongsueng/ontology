@@ -1,0 +1,71 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix lib: <http://example.org/library#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/library-schema> a owl:Ontology .
+
+# Classes
+lib:Person a rdfs:Class .
+lib:Author a rdfs:Class ;
+    rdfs:subClassOf lib:Person .
+lib:LibraryUser a rdfs:Class ;
+    rdfs:subClassOf lib:Person .
+lib:Student a rdfs:Class ;
+    rdfs:subClassOf lib:LibraryUser .
+lib:Staff a rdfs:Class ;
+    rdfs:subClassOf lib:LibraryUser .
+
+lib:LibraryResource a rdfs:Class .
+lib:Book a rdfs:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+lib:EBook a rdfs:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+lib:Multimedia a rdfs:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+
+lib:Genre a rdfs:Class .
+lib:Publisher a rdfs:Class .
+lib:Loan a rdfs:Class .
+lib:Reservation a rdfs:Class .
+
+lib:Location a rdfs:Class .
+lib:Floor a rdfs:Class ;
+    rdfs:subClassOf lib:Location .
+lib:Shelf a rdfs:Class ;
+    rdfs:subClassOf lib:Location .
+
+# Properties
+lib:hasAuthor a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Author .
+lib:title a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range rdfs:Literal .
+lib:name a rdf:Property ;
+    rdfs:domain lib:Person ;
+    rdfs:range rdfs:Literal .
+lib:hasGenre a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Genre .
+lib:publishedBy a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Publisher .
+lib:borrowedBy a rdf:Property ;
+    rdfs:domain lib:Loan ;
+    rdfs:range lib:LibraryUser .
+lib:loanedResource a rdf:Property ;
+    rdfs:domain lib:Loan ;
+    rdfs:range lib:LibraryResource .
+lib:reservedBy a rdf:Property ;
+    rdfs:domain lib:Reservation ;
+    rdfs:range lib:LibraryUser .
+lib:reservedResource a rdf:Property ;
+    rdfs:domain lib:Reservation ;
+    rdfs:range lib:LibraryResource .
+lib:locatedAt a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Location .
+lib:within a rdf:Property ;
+    rdfs:domain lib:Location ;
+    rdfs:range lib:Location .

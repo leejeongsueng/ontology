@@ -1,0 +1,139 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix lib: <http://example.org/library#> .
+
+<http://example.org/library> a owl:Ontology ;
+    owl:imports <http://example.org/library-schema> ;
+    rdfs:label "Library Ontology" ;
+    rdfs:comment "A simple library system ontology for learning purposes." .
+
+# Classes
+lib:Person a owl:Class .
+
+lib:Author a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty lib:wrote ;
+        owl:someValuesFrom lib:LibraryResource
+    ] ;
+    rdfs:subClassOf lib:Person .
+
+lib:LibraryUser a owl:Class ;
+    rdfs:subClassOf lib:Person ;
+    owl:disjointWith lib:Author .
+
+lib:Student a owl:Class ;
+    rdfs:subClassOf lib:LibraryUser .
+
+lib:Staff a owl:Class ;
+    rdfs:subClassOf lib:LibraryUser .
+
+lib:LibraryResource a owl:Class ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty lib:hasAuthor ;
+        owl:minCardinality "1"^^xsd:nonNegativeInteger
+    ] .
+
+lib:Book a owl:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+
+lib:EBook a owl:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+
+lib:Multimedia a owl:Class ;
+    rdfs:subClassOf lib:LibraryResource .
+
+lib:Genre a owl:Class .
+lib:Publisher a owl:Class .
+lib:Loan a owl:Class .
+lib:Reservation a owl:Class .
+
+lib:Location a owl:Class .
+lib:Floor a owl:Class ;
+    rdfs:subClassOf lib:Location .
+lib:Shelf a owl:Class ;
+    rdfs:subClassOf lib:Location .
+
+# Object Properties
+lib:wrote a owl:ObjectProperty ;
+    owl:inverseOf lib:hasAuthor ;
+    rdfs:domain lib:Author ;
+    rdfs:range lib:LibraryResource .
+
+lib:hasAuthor a owl:ObjectProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Author .
+
+lib:hasGenre a owl:ObjectProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Genre .
+
+lib:publishedBy a owl:ObjectProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Publisher .
+
+lib:hasPublisher a owl:ObjectProperty ;
+    owl:inverseOf lib:publishedBy .
+
+lib:borrowedBy a owl:ObjectProperty ;
+    rdfs:domain lib:Loan ;
+    rdfs:range lib:LibraryUser .
+
+lib:loanedResource a owl:ObjectProperty ;
+    a owl:FunctionalProperty ;
+    rdfs:domain lib:Loan ;
+    rdfs:range lib:LibraryResource .
+
+lib:reservedBy a owl:ObjectProperty ;
+    rdfs:domain lib:Reservation ;
+    rdfs:range lib:LibraryUser .
+
+lib:reservedResource a owl:ObjectProperty ;
+    rdfs:domain lib:Reservation ;
+    rdfs:range lib:LibraryResource .
+
+lib:isRelatedTo a owl:ObjectProperty ;
+    a owl:SymmetricProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:LibraryResource .
+
+lib:partOfSeries a owl:ObjectProperty ;
+    a owl:TransitiveProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:LibraryResource .
+
+lib:locatedAt a owl:ObjectProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:Location .
+
+lib:within a owl:ObjectProperty ;
+    a owl:TransitiveProperty ;
+    rdfs:domain lib:Location ;
+    rdfs:range lib:Location .
+
+# Property Chain: If a resource is at a shelf, and the shelf is within a floor, the resource is at the floor.
+lib:locatedAt owl:propertyChainAxiom ( lib:locatedAt lib:within ) .
+
+# Data Properties
+lib:title a owl:DatatypeProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range xsd:string .
+
+lib:name a owl:DatatypeProperty ;
+    rdfs:domain lib:Person ;
+    rdfs:range xsd:string .
+
+lib:isbn a owl:DatatypeProperty ;
+    a owl:FunctionalProperty ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range xsd:string .
+
+lib:loanDate a owl:DatatypeProperty ;
+    rdfs:domain lib:Loan ;
+    rdfs:range xsd:dateTime .
+
+lib:returnDate a owl:DatatypeProperty ;
+    rdfs:domain lib:Loan ;
+    rdfs:range xsd:dateTime .

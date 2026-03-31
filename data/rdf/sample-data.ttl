@@ -1,0 +1,87 @@
+@prefix lib: <http://example.org/library#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/library-data> a owl:Ontology ;
+    owl:imports <http://example.org/library> .
+
+# Genre Data
+lib:Genre_Dystopian a lib:Genre .
+lib:Genre_Fiction a lib:Genre .
+lib:Genre_Science a lib:Genre .
+
+# Location Data
+lib:Floor_1 a lib:Floor .
+lib:Floor_2 a lib:Floor .
+
+lib:Shelf_A1 a lib:Shelf ;
+    lib:within lib:Floor_1 .
+lib:Shelf_B2 a lib:Shelf ;
+    lib:within lib:Floor_2 .
+
+# Publisher Data
+lib:Publisher_SeckerWarburg a lib:Publisher ;
+    lib:name "Secker & Warburg" .
+
+lib:Publisher_ChattoWindus a lib:Publisher ;
+    lib:name "Chatto & Windus" .
+
+lib:Publisher_MITPress a lib:Publisher ;
+    lib:name "MIT Press" .
+
+# Author Data
+lib:Author_GeorgeOrwell a lib:Author ;
+    lib:name "George Orwell" .
+
+lib:Author_AldousHuxley a lib:Author ;
+    lib:name "Aldous Huxley" .
+
+lib:Author_MarvinMinsky a lib:Author ;
+    lib:name "Marvin Minsky" .
+
+# LibraryResource Data (Books, EBooks, Multimedia)
+lib:Book_1984 a lib:Book ;
+    lib:title "1984" ;
+    lib:hasAuthor lib:Author_GeorgeOrwell ;
+    lib:isbn "978-0451524935" ;
+    lib:hasGenre lib:Genre_Dystopian ;
+    lib:publishedBy lib:Publisher_SeckerWarburg ;
+    lib:isRelatedTo lib:Book_BraveNewWorld ;
+    lib:locatedAt lib:Shelf_A1 .
+
+lib:Book_BraveNewWorld a lib:Book ;
+    lib:title "Brave New World" ;
+    lib:hasAuthor lib:AldousHuxley ;
+    lib:isbn "978-0060850524" ;
+    lib:hasGenre lib:Genre_Dystopian ;
+    lib:publishedBy lib:Publisher_ChattoWindus ;
+    lib:locatedAt lib:Shelf_A1 .
+
+lib:EBook_SocietyOfMind a lib:EBook ;
+    lib:title "The Society of Mind" ;
+    lib:hasAuthor lib:Author_MarvinMinsky ;
+    lib:hasGenre lib:Genre_Science ;
+    lib:publishedBy lib:Publisher_MITPress .
+
+lib:DVD_AI_Documentary a lib:Multimedia ;
+    lib:title "AI: The Future" ;
+    lib:hasAuthor lib:Author_MarvinMinsky ;
+    lib:locatedAt lib:Shelf_B2 .
+
+# User Data
+lib:User_Alice a lib:Student ;
+    lib:name "Alice Kim" .
+
+lib:User_Bob a lib:Staff ;
+    lib:name "Bob Lee" .
+
+# Loan Data
+lib:Loan_001 a lib:Loan ;
+    lib:loanedResource lib:Book_1984 ;
+    lib:borrowedBy lib:User_Alice ;
+    lib:loanDate "2024-03-01T10:00:00"^^xsd:dateTime .
+
+# Reservation Data
+lib:Reservation_001 a lib:Reservation ;
+    lib:reservedResource lib:EBook_SocietyOfMind ;
+    lib:reservedBy lib:User_Bob .
