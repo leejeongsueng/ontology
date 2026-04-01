@@ -1,87 +1,87 @@
-@prefix lib: <http://example.org/library#> .
+﻿@prefix lib: <http://example.org/library#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <http://example.org/library-data> a owl:Ontology ;
     owl:imports <http://example.org/library> .
 
-# Genre Data
-lib:Genre_Dystopian a lib:Genre .
-lib:Genre_Fiction a lib:Genre .
-lib:Genre_Science a lib:Genre .
+# 장르 데이터
+lib:장르_디스토피아 a lib:Genre .
+lib:장르_소설 a lib:Genre .
+lib:장르_과학 a lib:Genre .
 
-# Location Data
-lib:Floor_1 a lib:Floor .
-lib:Floor_2 a lib:Floor .
+# 위치 데이터
+lib:층_1 a lib:Floor .
+lib:층_2 a lib:Floor .
 
-lib:Shelf_A1 a lib:Shelf ;
-    lib:within lib:Floor_1 .
-lib:Shelf_B2 a lib:Shelf ;
-    lib:within lib:Floor_2 .
+lib:서가_A1 a lib:Shelf ;
+    lib:within lib:층_1 .
+lib:서가_B2 a lib:Shelf ;
+    lib:within lib:층_2 .
 
-# Publisher Data
-lib:Publisher_SeckerWarburg a lib:Publisher ;
-    lib:name "Secker & Warburg" .
+# 출판사 데이터
+lib:출판사_세커앤워버그 a lib:Publisher ;
+    lib:name "세커 앤 워버그" .
 
-lib:Publisher_ChattoWindus a lib:Publisher ;
-    lib:name "Chatto & Windus" .
+lib:출판사_채토앤윈더스 a lib:Publisher ;
+    lib:name "채토 앤 윈더스" .
 
-lib:Publisher_MITPress a lib:Publisher ;
-    lib:name "MIT Press" .
+lib:출판사_MIT프레스 a lib:Publisher ;
+    lib:name "MIT 프레스" .
 
-# Author Data
-lib:Author_GeorgeOrwell a lib:Author ;
-    lib:name "George Orwell" .
+# 저자 데이터
+lib:저자_조지오웰 a lib:Author ;
+    lib:name "조지 오웰" .
 
-lib:Author_AldousHuxley a lib:Author ;
-    lib:name "Aldous Huxley" .
+lib:저자_올더스헉슬리 a lib:Author ;
+    lib:name "올더스 헉슬리" .
 
-lib:Author_MarvinMinsky a lib:Author ;
-    lib:name "Marvin Minsky" .
+lib:저자_마빈민스키 a lib:Author ;
+    lib:name "마빈 민스키" .
 
-# LibraryResource Data (Books, EBooks, Multimedia)
-lib:Book_1984 a lib:Book ;
+# 자료 데이터 (도서, 전자책, 멀티미디어)
+lib:도서_1984 a lib:Book ;
     lib:title "1984" ;
-    lib:hasAuthor lib:Author_GeorgeOrwell ;
+    lib:hasAuthor lib:저자_조지오웰 ;
     lib:isbn "978-0451524935" ;
-    lib:hasGenre lib:Genre_Dystopian ;
-    lib:publishedBy lib:Publisher_SeckerWarburg ;
-    lib:isRelatedTo lib:Book_BraveNewWorld ;
-    lib:locatedAt lib:Shelf_A1 .
+    lib:hasGenre lib:장르_디스토피아 ;
+    lib:publishedBy lib:출판사_세커앤워버그 ;
+    lib:isRelatedTo lib:도서_멋진신세계 ;
+    lib:locatedAt lib:서가_A1 .
 
-lib:Book_BraveNewWorld a lib:Book ;
-    lib:title "Brave New World" ;
-    lib:hasAuthor lib:AldousHuxley ;
+lib:도서_멋진신세계 a lib:Book ;
+    lib:title "멋진 신세계" ;
+    lib:hasAuthor lib:저자_올더스헉슬리 ;
     lib:isbn "978-0060850524" ;
-    lib:hasGenre lib:Genre_Dystopian ;
-    lib:publishedBy lib:Publisher_ChattoWindus ;
-    lib:locatedAt lib:Shelf_A1 .
+    lib:hasGenre lib:장르_디스토피아 ;
+    lib:publishedBy lib:출판사_채토앤윈더스 ;
+    lib:locatedAt lib:서가_A1 .
 
-lib:EBook_SocietyOfMind a lib:EBook ;
-    lib:title "The Society of Mind" ;
-    lib:hasAuthor lib:Author_MarvinMinsky ;
-    lib:hasGenre lib:Genre_Science ;
-    lib:publishedBy lib:Publisher_MITPress .
+lib:전자책_마음의사회 a lib:EBook ;
+    lib:title "마음의 사회" ;
+    lib:hasAuthor lib:저자_마빈민스키 ;
+    lib:hasGenre lib:장르_과학 ;
+    lib:publishedBy lib:출판사_MIT프레스 .
 
-lib:DVD_AI_Documentary a lib:Multimedia ;
-    lib:title "AI: The Future" ;
-    lib:hasAuthor lib:Author_MarvinMinsky ;
-    lib:locatedAt lib:Shelf_B2 .
+lib:멀티미디어_AI다큐멘터리 a lib:Multimedia ;
+    lib:title "AI: 미래" ;
+    lib:hasAuthor lib:저자_마빈민스키 ;
+    lib:locatedAt lib:서가_B2 .
 
-# User Data
-lib:User_Alice a lib:Student ;
-    lib:name "Alice Kim" .
+# 이용자 데이터
+lib:이용자_앨리스 a lib:Student ;
+    lib:name "앨리스 김" .
 
-lib:User_Bob a lib:Staff ;
-    lib:name "Bob Lee" .
+lib:이용자_밥 a lib:Staff ;
+    lib:name "밥 리" .
 
-# Loan Data
-lib:Loan_001 a lib:Loan ;
-    lib:loanedResource lib:Book_1984 ;
-    lib:borrowedBy lib:User_Alice ;
+# 대출 데이터
+lib:대출_001 a lib:Loan ;
+    lib:loanedResource lib:도서_1984 ;
+    lib:borrowedBy lib:이용자_앨리스 ;
     lib:loanDate "2024-03-01T10:00:00"^^xsd:dateTime .
 
-# Reservation Data
-lib:Reservation_001 a lib:Reservation ;
-    lib:reservedResource lib:EBook_SocietyOfMind ;
-    lib:reservedBy lib:User_Bob .
+# 예약 데이터
+lib:예약_001 a lib:Reservation ;
+    lib:reservedResource lib:전자책_마음의사회 ;
+    lib:reservedBy lib:이용자_밥 .

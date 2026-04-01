@@ -1,16 +1,15 @@
-import os
+﻿import os
 from neo4j import GraphDatabase
 
-# Neo4j 접속 정보 (본인의 환경에 맞게 수정하세요)
-NEO4J_URI = "bolt://localhost:7687"
+NEO4J_URI = "neo4j://127.0.0.1:7687"
 NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "password"  # 설정한 비밀번호로 변경하세요.
+NEO4J_PASSWORD = "qwerty12!@"
 
-# 로컬 파일 경로 (Windows 절대 경로로 변환)
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 SCHEMA_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "data", "rdf", "library-schema.ttl")).replace("\\", "/")
 OWL_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "data", "owl", "library.owl")).replace("\\", "/")
 DATA_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "data", "rdf", "sample-data.ttl")).replace("\\", "/")
+
 
 class Neo4jOntologyImporter:
     def __init__(self, uri, user, password):
@@ -24,52 +23,133 @@ class Neo4jOntologyImporter:
         with self.driver.session() as session:
             try:
                 result = session.run(query)
-                return result
+                return list(result)
             except Exception as e:
                 print(f"Error: {e}")
                 return None
 
     def setup_n10s(self):
-        # 1. n10s 초기 설정 (이미 되어있을 수 있으나 안전을 위해 실행)
-        self.run_query("CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS FOR (r:Resource) REQUIRE r.uri IS UNIQUE", "Creating constraint...")
-        self.run_query("CALL n10s.graphconfig.init()", "Initializing n10s graph config...")
-        
+        self.run_query(
+            """
+            CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS
+            FOR (r:Resource) REQUIRE r.uri IS UNIQUE
+            """,
+            "Ensuring n10s URI uniqueness constraint..."
+        )
+
+        self.run_query(
+            """CALL n10s.graphconfig.init({ handleVocabUris: "MAP" })""",
+            "Initializing n10s config (MAP mode)..."
+        )
+
+    def clear_database(self):
+        self.run_query(
+            "MATCH (n) DETACH DELETE n",
+            "Clearing existing nodes and relationships..."
+        )
+
     def import_data(self):
-        # 2. 스키마 및 데이터 임포트
-        # Neo4j Desktop/Server에서 'file:///' 프로토콜로 로컬 파일에 접근하려면 neo4j.conf의 
-        # dbms.directories.import 설정을 확인해야 합니다.
-        # 여기서는 절대 경로를 직접 사용하는 방식을 예제로 둡니다.
-        
         print(f"Importing Schema from: {SCHEMA_PATH}")
-        self.run_query(f"CALL n10s.rdf.import.fetch('file:///{SCHEMA_PATH}', 'Turtle')", "Importing library-schema.ttl...")
-        
+        self.run_query(
+            f"CALL n10s.rdf.import.fetch('file:///{SCHEMA_PATH}', 'Turtle')",
+            "Importing library-schema.ttl..."
+        )
+
         print(f"Importing OWL from: {OWL_PATH}")
-        self.run_query(f"CALL n10s.rdf.import.fetch('file:///{OWL_PATH}', 'Turtle')", "Importing library.owl...")
-        
+        self.run_query(
+            f"CALL n10s.rdf.import.fetch('file:///{OWL_PATH}', 'RDF/XML')",
+            "Importing library.owl (RDF/XML)..."
+        )
+
         print(f"Importing Sample Data from: {DATA_PATH}")
-        self.run_query(f"CALL n10s.rdf.import.fetch('file:///{DATA_PATH}', 'Turtle')", "Importing sample-data.ttl...")
+        self.run_query(
+            f"CALL n10s.rdf.import.fetch('file:///{DATA_PATH}', 'Turtle')",
+            "Importing sample-data.ttl..."
+        )
 
     def verify(self):
         print("\n--- Verification ---")
-        query = "MATCH (n:Resource) RETURN count(n) as count"
-        result = self.run_query(query, "Checking node count...")
-        if result:
-            for record in result:
-                print(f"Total nodes (Resources): {record['count']}")
 
-        query = "MATCH (n:lib__LibraryResource) RETURN n.lib__title as title"
-        result = self.run_query(query, "Listing resources...")
-        if result:
-            print("Resources in database:")
-            for record in result:
-                print(f"- {record['title']}")
+        result = self.run_query(
+            "MATCH (n:Resource) RETURN count(n) AS count",
+            "Counting Resource nodes..."
+        )
+        if result is not None and len(result) > 0:
+            print(f"Total Resource nodes: {result[0]['count']}")
+
+        # Sample-data individual counts by URI prefix (Koreanized dataset).
+        expected_prefix_counts = {
+            "도서_": 2,
+            "전자책_": 1,
+            "멀티미디어_": 1,
+            "저자_": 3,
+            "출판사_": 3,
+            "장르_": 3,
+            "이용자_": 2,
+            "대출_": 1,
+            "예약_": 1,
+            "층_": 2,
+            "서가_": 2,
+        }
+        print("\nSample-data node counts (by URI prefix):")
+        for prefix, expected in expected_prefix_counts.items():
+            count_result = self.run_query(
+                f"""
+                MATCH (n:Resource)
+                WHERE n.uri STARTS WITH 'http://example.org/library#{prefix}'
+                RETURN count(n) AS count
+                """,
+                f"- Counting `{prefix}` nodes..."
+            )
+            actual = count_result[0]["count"] if count_result else 0
+            status = "OK" if actual == expected else f"MISMATCH (expected {expected})"
+            print(f"  {prefix:12} -> {actual} [{status}]")
+
+        # Titles for concrete library resources from sample-data.
+        resources_result = self.run_query(
+            """
+            MATCH (n:Resource)
+            WHERE n.uri STARTS WITH 'http://example.org/library#도서_'
+               OR n.uri STARTS WITH 'http://example.org/library#전자책_'
+               OR n.uri STARTS WITH 'http://example.org/library#멀티미디어_'
+            WITH n, [k IN keys(n) WHERE toLower(k) CONTAINS 'title'] AS title_keys
+            RETURN n.uri AS uri,
+                   CASE WHEN size(title_keys) > 0 THEN n[title_keys[0]] ELSE null END AS title,
+                   CASE WHEN size(title_keys) > 0 THEN title_keys[0] ELSE null END AS title_key
+            ORDER BY uri
+            """,
+            "\nListing resource titles from sample-data..."
+        )
+        if resources_result is not None and len(resources_result) > 0:
+            print("Library resources:")
+            for record in resources_result:
+                print(f"- {record['uri']} | title={record['title']} (key={record['title_key']})")
+        else:
+            print("No sample library resources found by URI prefix.")
+
+        # Validate hasAuthor targets in a schema-agnostic way.
+        bad_author_links = self.run_query(
+            """
+            MATCH (r:Resource)-[rel]->(a:Resource)
+            WHERE toLower(type(rel)) CONTAINS 'hasauthor'
+              AND (a.uri IS NULL OR NOT a.uri STARTS WITH 'http://example.org/library#저자_')
+            RETURN r.uri AS resource_uri, type(rel) AS rel_type, a.uri AS author_uri
+            """,
+            "\nChecking hasAuthor link integrity..."
+        )
+        if bad_author_links:
+            print("Warning: invalid hasAuthor target(s) found:")
+            for record in bad_author_links:
+                print(f"- {record['resource_uri']} -[{record['rel_type']}]-> {record['author_uri']}")
+
 
 if __name__ == "__main__":
     importer = Neo4jOntologyImporter(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
     try:
+        importer.clear_database()
         importer.setup_n10s()
         importer.import_data()
         importer.verify()
-        print("\nImport Complete! Neo4j Browser에서 데이터를 확인하세요.")
+        print("\nImport Complete! Check Neo4j Browser.")
     finally:
         importer.close()

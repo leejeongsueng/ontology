@@ -1,12 +1,12 @@
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+﻿@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix lib: <http://example.org/library#> .
 
 <http://example.org/library> a owl:Ontology ;
     owl:imports <http://example.org/library-schema> ;
-    rdfs:label "Library Ontology" ;
-    rdfs:comment "A simple library system ontology for learning purposes." .
+    rdfs:label "도서관 온톨로지" ;
+    rdfs:comment "학습 목적의 간단한 도서관 시스템 온톨로지입니다." .
 
 # Classes
 lib:Person a owl:Class .

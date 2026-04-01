@@ -1,9 +1,10 @@
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+﻿@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix lib: <http://example.org/library#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
-<http://example.org/library-schema> a owl:Ontology .
+<http://example.org/library-schema> a owl:Ontology ;
+    rdfs:label "도서관 스키마" .
 
 # Classes
 lib:Person a rdfs:Class .
@@ -36,6 +37,9 @@ lib:Shelf a rdfs:Class ;
     rdfs:subClassOf lib:Location .
 
 # Properties
+lib:wrote a rdf:Property ;
+    rdfs:domain lib:Author ;
+    rdfs:range lib:LibraryResource .
 lib:hasAuthor a rdf:Property ;
     rdfs:domain lib:LibraryResource ;
     rdfs:range lib:Author .
@@ -51,6 +55,9 @@ lib:hasGenre a rdf:Property ;
 lib:publishedBy a rdf:Property ;
     rdfs:domain lib:LibraryResource ;
     rdfs:range lib:Publisher .
+lib:hasPublisher a rdf:Property ;
+    rdfs:domain lib:Publisher ;
+    rdfs:range lib:LibraryResource .
 lib:borrowedBy a rdf:Property ;
     rdfs:domain lib:Loan ;
     rdfs:range lib:LibraryUser .
@@ -63,9 +70,24 @@ lib:reservedBy a rdf:Property ;
 lib:reservedResource a rdf:Property ;
     rdfs:domain lib:Reservation ;
     rdfs:range lib:LibraryResource .
+lib:isRelatedTo a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:LibraryResource .
+lib:partOfSeries a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range lib:LibraryResource .
 lib:locatedAt a rdf:Property ;
     rdfs:domain lib:LibraryResource ;
     rdfs:range lib:Location .
 lib:within a rdf:Property ;
     rdfs:domain lib:Location ;
     rdfs:range lib:Location .
+lib:isbn a rdf:Property ;
+    rdfs:domain lib:LibraryResource ;
+    rdfs:range rdfs:Literal .
+lib:loanDate a rdf:Property ;
+    rdfs:domain lib:Loan ;
+    rdfs:range rdfs:Literal .
+lib:returnDate a rdf:Property ;
+    rdfs:domain lib:Loan ;
+    rdfs:range rdfs:Literal .

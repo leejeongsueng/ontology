@@ -1,85 +1,74 @@
-# 온톨로지 심화 학습 가이드: 도서관 시스템
+﻿# 온톨로지 설명 문서
 
-이 문서는 구축된 '도서관 시스템' 온톨로지를 쉽게 이해할 수 있도록 핵심 개념과 설계를 설명합니다.
+이 프로젝트는 도서관 도메인을 RDF/RDFS/OWL로 정의하고,
+그래프 DB(Neo4j)에서 데이터/관계를 검증하기 위한 학습용 모델입니다.
 
----
+## 1. 파일 역할
 
-## 1. RDFS vs OWL: 무엇이 다른가요?
+- `data/rdf/library-schema.ttl`
+  - RDFS 기반 클래스/속성 정의
+  - `subClassOf`, `domain`, `range` 중심
+- `data/owl/library.owl`
+  - OWL 기반 제약/추론 규칙 추가
+  - inverse/symmetric/transitive/property chain 등
+- `data/rdf/sample-data.ttl`
+  - 한글화된 인스턴스 데이터(저자, 도서, 이용자, 대출, 예약 등)
 
-이 프로젝트는 두 가지 방식으로 온톨로지를 정의하고 있습니다.
+## 2. 모델 요약
 
-### [RDFS (RDF Schema)](../data/rdf/library-schema.ttl)
-*   **역할:** 데이터의 **기본 구조(Hierarchy)**를 잡는 역할을 합니다.
-*   **핵심 요소:** `rdfs:subClassOf`, `rdfs:domain`, `rdfs:range`.
-*   **설명:** "작가는 사람의 일종이다", "책은 작가를 가진다"와 같은 단순한 계층과 속성 관계를 정의합니다. 가볍고 빠르지만 복잡한 논리를 표현하기엔 부족합니다.
+클래스 구조:
+- 사람: `Person` > `Author`, `LibraryUser` > `Student`, `Staff`
+- 자료: `LibraryResource` > `Book`, `EBook`, `Multimedia`
+- 운영: `Loan`, `Reservation`
+- 위치: `Location` > `Floor`, `Shelf`
+- 기타: `Genre`, `Publisher`
 
-### [OWL (Web Ontology Language)](../data/owl/library.owl)
-*   **역할:** 데이터 간의 **복잡한 논리와 제약 조건**을 정의합니다.
-*   **핵심 요소:** `owl:inverseOf`, `owl:SymmetricProperty`, `owl:TransitiveProperty`, `owl:disjointWith`, **`owl:propertyChainAxiom`** 등.
-*   **설명:** RDFS보다 훨씬 강력한 추론(Inference)을 가능하게 합니다. 예를 들어, 위치 정보의 연쇄 법칙을 정의하여 "책이 선반에 있고 선반이 1층에 있다면, 책은 1층에 있다"는 사실을 자동으로 도출합니다.
+주요 관계:
+- 저자/자료: `hasAuthor` <-> `wrote` (inverse)
+- 자료/장르: `hasGenre`
+- 자료/출판사: `publishedBy`
+- 대출: `loanedResource`, `borrowedBy`
+- 예약: `reservedResource`, `reservedBy`
+- 위치: `locatedAt`, `within`
+- 연관자료: `isRelatedTo` (symmetric)
 
----
+## 3. OWL 규칙 포인트
 
-## 2. 주요 클래스(Class) 설계 (확장)
+- `LibraryResource`는 최소 1명의 저자 필요(`minCardinality 1`)
+- `isRelatedTo`는 양방향 관계로 해석 가능(symmetric)
+- `within`은 계층적 포함 관계 전파(transitive)
+- `locatedAt` + `within`은 위치 추론 확장을 위한 chain으로 정의
 
-클래스는 실세계의 '개념'을 나타내며, 이번 확장에서는 자산의 종류와 사용자 유형을 구체화했습니다.
+## 4. 한글 데이터 네이밍
 
-| 클래스 | 설명 | 특징 |
-| :--- | :--- | :--- |
-| `LibraryResource` | 도서관의 모든 자산 | `Book`, `EBook`, `Multimedia`의 상위 클래스 |
-| `Book`, `EBook`, `Multimedia` | 자산의 세부 종류 | 각 자산은 매체 특성에 따라 분류됨 |
-| `Student`, `Staff` | 사용자 유형 | `LibraryUser`를 상속받아 권한이나 정책 분리가 가능함 |
-| `Location`, `Floor`, `Shelf` | 물리적 위치 | 자산이 어디에 있는지 계층적으로 표현 |
-| `Reservation` | 예약 정보 | 대출 외에 예약 프로세스를 관리하기 위한 클래스 |
+샘플 데이터의 개체 이름과 문자열 값을 한글로 정리했습니다.
 
----
+예시 URI:
+- `http://example.org/library#도서_1984`
+- `http://example.org/library#저자_조지오웰`
+- `http://example.org/library#출판사_세커앤워버그`
+- `http://example.org/library#이용자_앨리스`
 
-## 3. 속성(Property)의 마법: 추론 이해하기
+예시 literal:
+- `"멋진 신세계"`, `"마음의 사회"`, `"앨리스 김"`
 
-OWL의 강력함은 속성의 특성에서 나옵니다.
+## 5. Neo4j import 시 해석 주의
 
-### ① 역관계 (Inverse Property)
-*   **정의:** `lib:wrote` ↔ `lib:hasAuthor`
-*   **효과:** 작가가 책을 썼다는 사실만 알면, 책의 저자가 누구인지 자동으로 연결됩니다.
+`n10s` import 결과에서 클래스가 항상 라벨로 그대로 매핑된다고 가정하면
+쿼리가 쉽게 깨집니다. 그래서 현재 스크립트는:
 
-### ② 대칭적 속성 (Symmetric Property)
-*   **정의:** `lib:isRelatedTo`
-*   **효과:** A와 B가 관련 있다면, B와 A도 자동으로 관련 있는 것으로 처리됩니다.
+- 라벨 고정 조회 대신 URI prefix 기반 검증 사용
+- 속성 키도 고정값 대신 동적 탐색(`keys(n)` + `title` 포함 키 탐색)
 
-### ③ 이행적 속성 (Transitive Property)
-*   **정의:** `lib:partOfSeries`, **`lib:within`**
-*   **효과:** "선반 A는 1층에 있다", "1층은 본관에 있다"면 "선반 A는 본관에 있다"는 논리가 성립합니다.
+이 방식은 매핑 모드가 달라도 검증 로직이 유지된다는 장점이 있습니다.
 
-### ④ 속성 체인 (Property Chain Axiom)
-*   **정의:** `lib:locatedAt` ∘ `lib:within` → `lib:locatedAt`
-*   **효과:** **고급 추론**입니다. 자산이 `선반`에 있고, 선반이 `층` 안에 있다면, 자산이 해당 `층`에 있다는 관계를 자동으로 생성합니다.
+## 6. 스크립트 검증 항목
 
----
+`import_to_neo4j.py`의 `verify()`는 아래를 확인합니다.
 
-## 4. 고급 제약 조건 (Restrictions)
+1. 전체 `:Resource` 수
+2. 한글 URI prefix별 개수 기대값 일치 여부
+3. 도서/전자책/멀티미디어 title 조회
+4. `hasAuthor` 대상이 `저자_` 개체인지 무결성 점검
 
-### 서로소 관계 (Disjoint Classes)
-`Author`와 `LibraryUser`는 서로소입니다. 또한, 이번 확장에서는 다양한 자산 종류들도 서로소로 설정하여 논리적 명확성을 높일 수 있습니다.
-
-### 카디널리티 (Cardinality)
-`LibraryResource` 클래스에는 `minCardinality 1` 제약이 걸려 있어, 모든 자산은 반드시 최소 한 명의 저자 정보를 가져야 합니다.
-
----
-
-## 5. 샘플 데이터로 확인하기
-
-`data/rdf/sample-data.ttl` 파일을 보면 실제 인스턴스들이 정의되어 있습니다.
-
-1.  **조지 오웰(George Orwell)**은 `lib:Author`로 정의되었습니다.
-2.  **1984**라는 책은 `lib:hasAuthor`로 조지 오웰과 연결되고, `lib:isbn`을 가집니다.
-3.  **앨리스(Alice)**라는 이용자가 **1984**를 대출한 기록(`lib:Loan_001`)이 존재합니다.
-
-이 데이터를 Protege의 추론기(Reasoner)로 돌리면, 명시적으로 적지 않은 수많은 관계들이 자동으로 생성되는 것을 볼 수 있습니다.
-
----
-
-## 6. 다음 단계: 어떻게 활용하나요?
-
-1.  **시각화:** Protege 프로그램에서 `library.owl`을 열어 클래스 계층도를 확인해 보세요.
-2.  **질의:** SPARQL을 사용하여 "특정 장르의 책을 빌려간 사용자의 이름은?"과 같은 복잡한 질문을 던져보세요.
-3.  **확장:** 반납 여부(`isReturned`), 연체료 계산 등 더 복잡한 비즈니스 로직을 속성으로 추가해 보세요.
+이 검증은 단순 실행 성공 여부보다 데이터 품질까지 같이 점검하도록 설계되어 있습니다.
